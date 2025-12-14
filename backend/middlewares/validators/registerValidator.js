@@ -9,7 +9,14 @@ const registerValidator = [
         .isStrongPassword()
         .withMessage(
             "Password must be at least 8 characters and include uppercase, lowercase, number, and symbol"
-        )
+        ),
+    body("confirmPassword")
+        .custom((value, { req }) => {
+            if (value !== req.body.password) {
+                throw new Error("Password do not matched")
+            }
+            return true
+        })
 ];
 
 

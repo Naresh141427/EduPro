@@ -1,15 +1,20 @@
+
+require("./config/env");
+
 const express = require("express");
+const cookieParser = require("cookie-parser");
+const authRoutes = require("./routes/authRoutes");
+
 const app = express();
-const cookieParser = require("cookie-parser")
-const userRoutes = require("./routes/userRoutes");
 
+// global middleware
 app.use(express.json());
-app.use(cookieParser())
+app.use(cookieParser());
+
+// routes
+app.use("/api/users", authRoutes);
+
+app.get("/", (req, res) => res.send("App running successfully"))
 
 
-app.use("/api/users", userRoutes);
-
-
-app.listen(3000, () => {
-    console.log("Server running on http://localhost:3000");
-});
+module.exports = app;

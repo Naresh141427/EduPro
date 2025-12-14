@@ -2,9 +2,12 @@ const express = require("express")
 const router = express.Router()
 
 const authController = require("../controllers/authController")
-const { loginvalidator } = require("../middlewares/validators/registerValidator")
+const { loginValidator, registerValidator } = require("../middlewares/validators/registerValidator")
 
-router.post("/login", loginvalidator, authController.login)
+
+router.post("/signup", registerValidator, authController.registerUser)
+
+router.post("/login", loginValidator, authController.login)
 
 router.post("/refresh", authController.refresh)
 

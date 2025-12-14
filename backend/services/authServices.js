@@ -1,8 +1,9 @@
 const tokenServices = require("./tokenServices.js")
 const sessionModel = require("../models/sessionModel.js")
 const userModel = require("../models/userModel.js")
+const env = require("../config/env")
 
-const DAYS = parseInt(process.env.REFRESH_TOKEN_EXPIRES_DAYS || "30", 10)
+const DAYS = parseInt(env.REFRESH_TOKEN_EXPIRES_DAYS)
 
 async function createSessionForUser(user, ipAddress, userAgent) {
 
@@ -14,7 +15,7 @@ async function createSessionForUser(user, ipAddress, userAgent) {
 
     await sessionModel.createSession({
         userUUID: user.uuid,
-        refreshTokenHash: refreshTokenHash,
+        refreshTokenHash,
         userAgent,
         ipAddress,
         expiresAt

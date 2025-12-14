@@ -1,3 +1,4 @@
+const env = require("../config/env")
 const crypto = require("crypto")
 const jwt = require("jsonwebtoken")
 
@@ -12,6 +13,6 @@ module.exports = {
     },
 
     generateAccessToken(payload) {
-        return jwt.sign(payload, process.env.JWT_SECRET, { expiresIn: process.env.JWT_EXPIRES || "15m" })
+        return jwt.sign(payload, env.JWT.SECRET, { expiresIn: env.JWT.EXPIRES })
     }
 }

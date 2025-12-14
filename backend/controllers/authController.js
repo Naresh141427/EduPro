@@ -1,12 +1,36 @@
-const { validationResult } = require("express-validaotr")
+const { validationResult } = require("express-validator")
 const userService = require("../services/userServices")
 const authServices = require("../services/authServices")
+const cookieConfig = require("../config/cookies.js")
 
 
-const COOKIE_NAME = process.env.REFRESH_TOKEN_COOKIE_NAME || "refreshToken"
-const COOKIE_SECURE = process.env.COOKIE_SECURE || true
-const COOKIE_HTTP_ONLY = process.env.COOKIE_HTTP_ONLY !== false
-const COOKIE_SAME_SITE = process.env.COOKIE_SAME_SITE || "None"
+exports.registerUser = async (req, res) => {
+    try {
+
+        const errors = validationResult(req);
+        if (!errors.isEmpty()) {
+            return res.status(400).json({ errors: errors.array() });
+        }
+
+        const { fullname, email, password } = req.body;
+
+        const user = await userService.createUserService(fullname, email, password);
+
+        return res.status(201).json({
+            message: "User registered successfully",
+            data: user
+        });
+    } catch (err) {
+        console.error("Registration Error:", err.message);
+        if (err.message === "Email already exists") {
+            return res.status(409).json({ error: err.message });
+        }
+
+        return res.status(500).json({ error: "Internal server error" });
+    }
+};
+
+
 
 exports.login = async (req, res) => {
     try {
@@ -23,12 +47,13 @@ exports.login = async (req, res) => {
 
         const session = await authServices.createSessionForUser(user, req.ip, req.get("User-Agent"))
 
-        res.cookie(COOKIE_NAME, session.refreshToken, {
-            httpOnly: COOKIE_HTTP_ONLY,
-            secure: COOKIE_SECURE,
-            sameSite: COOKIE_SAME_SITE,
-            expires: session.expiresAt
-        })
+        res.cookie(
+            cookieConfig.refreshTokenName,
+            session.refreshToken,
+            {
+                ...cookieConfig.refreshToken,
+                expires: session.expiresAt
+            })
 
 
         return res.status(200).json({
@@ -46,7 +71,7 @@ exports.login = async (req, res) => {
 
         if (err.message === "Invalid email or password") {
             return res.status(401).json({
-                error: error.message
+                error: err.message
             })
         }
 
@@ -61,7 +86,7 @@ exports.login = async (req, res) => {
 exports.refresh = async (req, res) => {
     try {
 
-        const token = req.cookies(COOKIE_NAME)
+        const token = req.cookies[cookieConfig.refreshTokenName]
 
         if (!token) {
             return res.status(401).json({
@@ -71,12 +96,14 @@ exports.refresh = async (req, res) => {
 
         const session = await authServices.refreshSession(token)
 
-        res.cookie(COOKIE_NAME, session.refreshToken, {
-            httpOnly: COOKIE_HTTP_ONLY,
-            secure: COOKIE_SECURE,
-            sameSite: COOKIE_SAME_SITE,
-            expires: session.expiresAt
-        })
+        res.cookie(
+            cookieConfig.refreshTokenName,
+            session.refreshToken,
+            {
+                ...cookieConfig.refreshToken,
+                expires: session.expiresAt
+            })
+
 
 
         return res.status(200).json({
@@ -87,7 +114,7 @@ exports.refresh = async (req, res) => {
             }
         })
 
-    } catch (error) {
+    } catch (err) {
         console.log("Token refresh error: ", err.message);
         return res.status(401).json({
             error: "Invalid or expired refresh token"
@@ -97,26 +124,22 @@ exports.refresh = async (req, res) => {
 
 exports.logout = async (req, res) => {
     try {
-
-        const token = req.cookies(COOKIE_NAME)
+        const token = req.cookies[cookieConfig.refreshTokenName];
 
         if (token) {
-            await authServices.revokeRefreshToken(token)
+            await authServices.revokeRefreshToken(token);
         }
 
-        res.clearCookie(COOKIE_NAME, {
-            hhtpOnly: COOKIE_HTTP_ONLY,
-            secure: COOKIE_SECURE,
-            sameSite: COOKIE_SAME_SITE
-        })
+        res.clearCookie(
+            cookieConfig.refreshTokenName,
+            cookieConfig.refreshToken
+        );
 
         return res.status(200).json({
-            message: "Logout successfull"
-        })
-
-    } catch (error) {
+            message: "Logout successful"
+        });
+    } catch (err) {
         console.error("Logout Error:", err.message);
         return res.status(500).json({ error: "Internal server error" });
     }
-
-}
+};
