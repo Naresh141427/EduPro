@@ -1,17 +1,16 @@
-const tokenServices = require("./tokenServices.js")
-const sessionModel = require("../models/sessionModel.js")
-const userModel = require("../models/userModel.js")
-const env = require("../config/env")
+const tokenServices = require("./tokenServices");
+const sessionModel = require("../models/sessionModel");
+const userModel = require("../models/userModel");
+const AppError = require("../utils/AppError");
+const env = require("../config/env");
 
-const DAYS = parseInt(env.REFRESH_TOKEN_EXPIRES_DAYS)
+const DAYS = parseInt(env.REFRESH_TOKEN_EXPIRES_DAYS, 10);
 
 async function createSessionForUser(user, ipAddress, userAgent) {
+    const rawRefreshToken = tokenServices.generateRefreshToken();
+    const refreshTokenHash = tokenServices.hashRefreshToken(rawRefreshToken);
 
-    const rawRefreshToken = tokenServices.generateRefreshToken()
-
-    const refreshTokenHash = tokenServices.hashRefreshToken(rawRefreshToken)
-
-    const expiresAt = new Date(Date.now() + DAYS * 24 * 60 * 60 * 1000)
+    const expiresAt = new Date(Date.now() + DAYS * 24 * 60 * 60 * 1000);
 
     await sessionModel.createSession({
         userUUID: user.uuid,
@@ -19,78 +18,79 @@ async function createSessionForUser(user, ipAddress, userAgent) {
         userAgent,
         ipAddress,
         expiresAt
-    })
+    });
 
     const accessPayload = {
         uuid: user.uuid,
         email: user.email,
         role: user.role
+    };
 
-    }
-
-    const accessToken = tokenServices.generateAccessToken(accessPayload)
+    const accessToken = tokenServices.generateAccessToken(accessPayload);
 
     return {
         accessToken,
         refreshToken: rawRefreshToken,
-        accessPayload,
         expiresAt
-    }
-
+    };
 }
 
 async function refreshSession(rawRefreshToken) {
-    const oldHash = tokenServices.hashRefreshToken(rawRefreshToken)
+    const oldHash = tokenServices.hashRefreshToken(rawRefreshToken);
 
-
-    const session = await sessionModel.findSessionByHash(oldHash)
-
+    const session = await sessionModel.findSessionByHash(oldHash);
     if (!session) {
-        throw new Error("Invalid refresh token ")
+        throw new AppError("Invalid refresh token", 401);
     }
 
     if (new Date(session.expires_at) < new Date()) {
-        await sessionModel.deleteSessionByHash(oldHash)
-        throw new Error("Refresh token expired")
+        await sessionModel.deleteSessionByHash(oldHash);
+        throw new AppError("Refresh token expired", 401);
     }
 
-    const user = await userModel.getUserByUUID(session.user_uuid)
-
+    const user = await userModel.getUserByUUID(session.user_uuid);
     if (!user || !user.is_active) {
-        await sessionModel.deleteSessionByHash(oldHash)
-        throw new Error("Invalid user for this session")
+        await sessionModel.deleteSessionByHash(oldHash);
+        throw new AppError("Invalid user for this session", 401);
     }
 
-    const newRawRefreshToken = tokenServices.generateRefreshToken()
-    const newHashedRefreshToken = tokenServices.hashRefreshToken(newRawRefreshToken)
-    const newExpiry = new Date(Date.now() + DAYS * 24 * 60 * 60 * 1000)
+    const newRawRefreshToken = tokenServices.generateRefreshToken();
+    const newHashedRefreshToken = tokenServices.hashRefreshToken(newRawRefreshToken);
+    const newExpiry = new Date(Date.now() + DAYS * 24 * 60 * 60 * 1000);
 
-    const updated = await sessionModel.rotateSession(oldHash, newHashedRefreshToken, newExpiry)
+    const updated = await sessionModel.rotateSession(
+        oldHash,
+        newHashedRefreshToken,
+        newExpiry
+    );
 
     if (!updated) {
-        throw new Error("Failed to rotate refresh token")
+        throw new AppError("Failed to rotate refresh token", 500);
     }
 
-    const payload = { uuid: user.uuid, email: user.email, role: user.role }
-    const newAccessToken = await tokenServices.generateAccessToken(payload)
+    const payload = {
+        uuid: user.uuid,
+        email: user.email,
+        role: user.role
+    };
+
+    const newAccessToken = tokenServices.generateAccessToken(payload);
 
     return {
         accessToken: newAccessToken,
         refreshToken: newRawRefreshToken,
         expiresAt: newExpiry,
         user: payload
-    }
+    };
 }
-
 
 async function revokeRefreshToken(rawRefreshToken) {
-    const hash = tokenServices.hashRefreshToken(rawRefreshToken)
-    return sessionModel.deleteSessionByHash(hash)
+    const hash = tokenServices.hashRefreshToken(rawRefreshToken);
+    return sessionModel.deleteSessionByHash(hash);
 }
-
 
 module.exports = {
     createSessionForUser,
     refreshSession,
     revokeRefreshToken
-}
+};

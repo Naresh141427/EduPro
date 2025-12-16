@@ -1,32 +1,24 @@
 const jwt = require("jsonwebtoken");
+const AppError = require("../utils/AppError");
 
 module.exports = function authMiddleware(req, res, next) {
+    const authHeader = req.headers.authorization;
+
+    if (!authHeader || !authHeader.startsWith("Bearer ")) {
+        throw new AppError("Unauthorized: No token provided", 401);
+    }
+
+    const token = authHeader.split(" ")[1];
+
     try {
-        const authHeader = req.headers.authorization;
-
-
-        if (!authHeader || !authHeader.startsWith("Bearer ")) {
-            return res.status(401).json({ error: "Unauthorized: No token provided" });
-        }
-
-        const token = authHeader.split(" ")[1];
-
-
         const decoded = jwt.verify(token, process.env.JWT_SECRET);
-
-
         req.user = decoded;
-
-
         next();
-
     } catch (err) {
-        console.error("Auth Middleware Error:", err.message);
-
         if (err.name === "TokenExpiredError") {
-            return res.status(401).json({ error: "Access token expired" });
+            throw new AppError("Access token expired", 401);
         }
 
-        return res.status(401).json({ error: "Invalid access token" });
+        throw new AppError("Invalid access token", 401);
     }
 };

@@ -29,5 +29,38 @@ module.exports = {
             [uuid]
         );
         return rows[0];
+    },
+
+    async updateUser(uuid, data) {
+        const { name, email } = data
+
+        const fields = []
+        const values = []
+
+        if (name) {
+            fields.push("name = ?")
+            values.push(name)
+        }
+
+        if (email) {
+            fields.push("email = ?")
+            values.push(email)
+        }
+
+        values.push(uuid)
+
+        await db.execute(
+            `
+                UPDATE users
+                SET    
+                    ${fields.join(", ")}
+                WHERE
+                    uuid = ?
+            `,
+            values
+        )
+
+        return this.getUserByUUID(uuid);
+
     }
 };
