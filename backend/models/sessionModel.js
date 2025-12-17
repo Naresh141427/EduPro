@@ -31,7 +31,7 @@ module.exports = {
         return result.affectedRows
     },
 
-    async deleteSessionByUser(userUUID) {
+    async deleteSessionByUserUUID(userUUID) {
         const [result] = await db.execute(
             "DELETE FROM user_sessions WHERE user_uuid = ?",
             [userUUID]
@@ -54,7 +54,8 @@ module.exports = {
         )
 
         return result.affectedRows
-    }
+    },
+
 
 
 }

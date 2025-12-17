@@ -3,6 +3,8 @@
 const userModel = require("../models/userModel")
 const AppError = require("../utils/AppError")
 const userServices = require("../services/userServices")
+const authServices = require("../services/authServices")
+const { validationResult } = require("express-validator")
 
 
 exports.getMe = async (req, res) => {
@@ -42,4 +44,35 @@ exports.updateMe = async (req, res) => {
         user: updatedUser
     })
 
+}
+
+exports.updatePassword = async (req, res) => {
+
+    const errors = validationResult(req)
+    if (!errors.isEmpty()) {
+        console.log(errors.array());
+        throw new AppError(errors.array()[0].msg, 400)
+    }
+
+    const userUUID = req.user.uuid
+    const { currentPassword, newPassword } = req.body
+    await userServices.updateUserPasswordService(userUUID, { currentPassword, newPassword })
+
+    await authServices.revokeSessionByUserUUID(userUUID)
+
+    return res.status(200).json({
+        message: "password changed successfully. Please login again!"
+    })
+}
+
+exports.deactivateUser = async (req, res) => {
+    const userUUID = req.user.uuid
+
+    await userServices.deactivateUserService(userUUID)
+
+    await authServices.revokeSessionByUserUUID(userUUID)
+
+    return res.status(200).json({
+        message: "Account deactivated successfully"
+    })
 }

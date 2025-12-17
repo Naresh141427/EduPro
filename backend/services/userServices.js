@@ -70,14 +70,12 @@ const updateUserService = async (userUUID, data) => {
                 "Please use a different email address",
                 400
             );
-            const emailExist = await userModel.getUserByEmail(email)
-            if (emailExist) {
-                throw new AppError("Email already in use", 409)
-            }
         }
-
+        const emailExist = await userModel.getUserByEmail(email)
+        if (emailExist) {
+            throw new AppError("Email already in use", 409)
+        }
     }
-
 
     const updated = await userModel.updateUser(userUUID, data)
 
@@ -90,8 +88,52 @@ const updateUserService = async (userUUID, data) => {
 
 }
 
+
+
+// UPDATE USER PASSWORD
+
+const updateUserPasswordService = async (uuid, data) => {
+
+    const user = await userModel.getUserWithPasswordByUUID(uuid)
+
+    if (!user) {
+        throw new AppError("User not found", 404)
+    }
+
+    if (!user.is_active) {
+        throw new AppError("User account is disabled", 403)
+    }
+
+    const { currentPassword, newPassword } = data
+
+    const isPasswordMatched = await bcrypt.compare(currentPassword, user.password)
+    if (!isPasswordMatched) {
+        throw new AppError("Incorrect cuurent password", 401)
+    }
+    const hashNewPassword = await bcrypt.hash(newPassword, 10)
+    const updatePassword = await userModel.updateUserPassword(uuid, hashNewPassword)
+
+}
+
+const deactivateUserService = async (uuid) => {
+    const user = await userModel.getUserByUUID(uuid)
+
+    if (!user) {
+        throw new AppError("User not found", 404)
+    }
+
+    if (!user.is_active) {
+        throw new AppError("Account already deactivated", 400)
+    }
+
+    await userModel.deactivateUser(uuid)
+
+}
+
 module.exports = {
     createUserService,
     loginUserService,
-    updateUserService
+    updateUserService,
+    updateUserPasswordService,
+    deactivateUserService
 };

@@ -31,6 +31,15 @@ module.exports = {
         return rows[0];
     },
 
+    async getUserWithPasswordByUUID(uuid) {
+        const [rows] = await db.execute(
+            `SELECT uuid, password, is_active
+             FROM users WHERE uuid = ? LIMIT 1`,
+            [uuid]
+        );
+        return rows[0];
+    },
+
     async updateUser(uuid, data) {
         const { name, email } = data
 
@@ -62,5 +71,20 @@ module.exports = {
 
         return this.getUserByUUID(uuid);
 
+    },
+
+    async updateUserPassword(uuid, passwordHash) {
+
+        await db.execute(
+            "UPDATE users SET password = ? WHERE uuid = ?",
+            [passwordHash, uuid]
+        )
+    },
+
+    async deactivateUser(uuid) {
+        await db.execute(
+            "UPDATE users SET is_active=0 WHERE uuid = ?",
+            [uuid]
+        )
     }
 };

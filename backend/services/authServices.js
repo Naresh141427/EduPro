@@ -89,8 +89,13 @@ async function revokeRefreshToken(rawRefreshToken) {
     return sessionModel.deleteSessionByHash(hash);
 }
 
+async function revokeSessionByUserUUID(uuid) {
+    return sessionModel.deleteSessionByUserUUID(uuid)
+}
+
 module.exports = {
     createSessionForUser,
     refreshSession,
-    revokeRefreshToken
+    revokeRefreshToken,
+    revokeSessionByUserUUID
 };

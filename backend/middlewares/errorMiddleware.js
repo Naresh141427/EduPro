@@ -8,7 +8,7 @@ module.exports = (err, req, res, next) => {
 
     const { statusCode, message } = err;
 
-    console.error("ERROR 💥", err);
+    console.error("ERROR: ", err);
 
     res.status(statusCode).json({
         status: "error",
