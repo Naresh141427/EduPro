@@ -6,7 +6,7 @@ const asyncHandler = require("../utils/asyncHandler")
 const userController = require("../controllers/userController")
 const authMiddleware = require("../middlewares/authMiddleware")
 const { userPasswordUpdateValidator } = require("../middlewares/validators/registerValidator")
-const requirePermission = require("../middlewares/rbacMiddleware")
+const requirePermission = require("../middlewares/pbacMiddleware")
 
 
 router.get("/me", authMiddleware, asyncHandler(userController.getMe))
