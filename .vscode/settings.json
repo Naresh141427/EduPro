@@ -1,0 +1,28 @@
+{
+  "editor.formatOnSave": true,
+  "editor.formatOnPaste": true,
+  "editor.defaultFormatter": "esbenp.prettier-vscode",
+  "emmet.triggerExpansionOnTab": true,
+  "emmet.showSuggestionsAsSnippets": true,
+  "emmet.showExpandedAbbreviation": "always",
+  "emmet.includeLanguages": {
+    "javascript": "javascriptreact",
+    "ejs": "html",
+    "vue": "html",
+    "typescript": "typescriptreact"
+  },
+  "files.associations": {
+    "*.js": "javascriptreact",
+    "*.html": "html"
+  },
+  "[html]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
+  },
+  "[javascript]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
+  },
+  "[javascriptreact]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
+  },
+  "files.autoSave": "afterDelay"
+}

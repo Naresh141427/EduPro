@@ -19,11 +19,15 @@ exports.getMe = async (req, res) => {
     }
 
     return res.status(200).json({
-        user: {
+        success: true,
+        message: "Data retrieved successfully",
+        data:{
+            user: {
             uuid: user.uuid,
             name: user.name,
             email: user.email,
             role: user.role
+        }
         }
     })
 }
@@ -40,8 +44,11 @@ exports.updateMe = async (req, res) => {
     const updatedUser = await userServices.updateUserService(userUUID, { name, email })
 
     return res.status(200).json({
+        success: true,
         message: "Proile updated successfully",
-        user: updatedUser
+        data:{
+            user: updatedUser
+        }
     })
 
 }
@@ -50,7 +57,6 @@ exports.updatePassword = async (req, res) => {
 
     const errors = validationResult(req)
     if (!errors.isEmpty()) {
-        console.log(errors.array());
         throw new AppError(errors.array()[0].msg, 400)
     }
 
@@ -61,6 +67,7 @@ exports.updatePassword = async (req, res) => {
     await authServices.revokeSessionByUserUUID(userUUID)
 
     return res.status(200).json({
+        success: true,
         message: "password changed successfully. Please login again!"
     })
 }
@@ -73,6 +80,7 @@ exports.deactivateUser = async (req, res) => {
     await authServices.revokeSessionByUserUUID(userUUID)
 
     return res.status(200).json({
+        success: true,
         message: "Account deactivated successfully"
     })
 }

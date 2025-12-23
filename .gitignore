@@ -27,7 +27,7 @@ tmp/
 temp/
 .cache/
 .eslintcache
-.vscode/
+
 
 # OS-specific files
 .DS_Store

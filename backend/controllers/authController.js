@@ -21,8 +21,11 @@ exports.registerUser = async (req, res) => {
     );
 
     return res.status(201).json({
+        success: true,
         message: "User registered successfully",
-        user
+        data:{
+            user
+        }
     });
 };
 
@@ -55,14 +58,18 @@ exports.login = async (req, res) => {
 
 
     return res.status(200).json({
+        success: true,
         message: "Login successfull",
-        user: {
+       dat:{
+        accessToken: session.accessToken,
+         user: {
             uuid: user.uuid,
             name: user.name,
             email: user.email,
             role: user.role,
-        },
-        accessToken: session.accessToken
+        }
+       }
+
     })
 }
 
@@ -85,9 +92,12 @@ exports.refresh = async (req, res) => {
     );
 
     return res.status(200).json({
+        success: true,
         message: "Token refreshed",
-        accessToken: session.accessToken,
-        user: session.user
+        data:{
+            accessToken: session.accessToken,
+            user: session.user
+        }
     });
 };
 
@@ -105,6 +115,7 @@ exports.logout = async (req, res) => {
     );
 
     return res.status(200).json({
+        success: true,
         message: "Logout successful"
     });
 };

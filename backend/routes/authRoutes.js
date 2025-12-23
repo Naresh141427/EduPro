@@ -4,17 +4,19 @@ const router = express.Router()
 const authController = require("../controllers/authController")
 const { loginValidator, registerValidator } = require("../middlewares/validators/registerValidator")
 const asyncHandler = require("../utils/asyncHandler")
-
+const { authLimiter } = require("../middlewares/rateLimiters")
 
 
 router.post(
     "/signup",
+    authLimiter,
     registerValidator,
     authController.registerUser
 )
 
 router.post(
     "/login",
+    authLimiter,
     loginValidator,
     asyncHandler(authController.login)
 )
