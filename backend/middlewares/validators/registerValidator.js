@@ -64,4 +64,31 @@ const userPasswordUpdateValidator = [
 ]
 
 
-module.exports = { registerValidator, loginValidator, userPasswordUpdateValidator }
+const forgotPasswordValidator = [
+    body("email")
+        .isEmail()
+        .withMessage("Valid email is required")
+];
+
+const resetPasswordValidator = [
+    body("password")
+        .isStrongPassword()
+        .withMessage(
+            "Password must be at least 8 characters and include uppercase, lowercase, number, and symbol"
+        ),
+    body("confirmPassword")
+        .custom((value, { req }) => {
+            if (value !== req.body.password) {
+                throw new Error("Passwords do not match")
+            }
+            return true
+        })
+];
+
+module.exports = { 
+    registerValidator, 
+    loginValidator, 
+    userPasswordUpdateValidator,
+    forgotPasswordValidator,
+    resetPasswordValidator
+}
